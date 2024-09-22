@@ -260,7 +260,7 @@ body {
 }
 
 .about-us-container {
-    background-image: url("../images/image.png") ;
+    background-image: url("image.png") ;
     height: 100vh;
     background-size: cover;
     /* justify-content: space-between; */
