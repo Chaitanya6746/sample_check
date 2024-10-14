@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>All Posts</title>
+</head>
+<body>
+    <h1>All Posts</h1>
+    <form th:action="@{/view/posts/new}" method ="get">
+    	<button type="submit">Add New Post</button>
+    </form>
+    <div th:each="post : ${post}">
+        <div class="post">
+            <h2 th:text="${post.title}">Post Title</h2>
+            <p th:text="${post.content}">Post Content</p>
+            <div class="comments">
+                <h3>Comments:</h3>       
+            </div>
+        </div>
+    </div>
+</body>
+</html>
