@@ -1,216 +1,329 @@
--- ================================
--- Colleges Table
--- ================================
+-- Create tables
+
+-- Colleges table
 CREATE TABLE colleges (
-    clg_id SMALLINT PRIMARY KEY,
-    clg_name VARCHAR(80) NOT NULL,
+    clg_id SERIAL PRIMARY KEY,
+    clg_name VARCHAR(80),
     clg_address VARCHAR(255),
     clg_contact VARCHAR(15)
 );
 
--- ================================
--- Branches Table
--- ================================
+-- Branches table
 CREATE TABLE branches (
-    brn_id SMALLINT PRIMARY KEY,
-    brn_clg_id SMALLINT NOT NULL REFERENCES colleges(clg_id) ON DELETE CASCADE,
-    brn_name VARCHAR(50) NOT NULL,
+    brn_id SERIAL PRIMARY KEY,
+    brn_clg_id INTEGER REFERENCES colleges(clg_id),
+    brn_name VARCHAR(50),
     brn_desc VARCHAR(255)
 );
 
--- ================================
--- Users Table
--- ================================
+-- Users table
 CREATE TABLE users (
-    usr_id SMALLINT PRIMARY KEY,
-    usr_email VARCHAR(100) NOT NULL UNIQUE,
-    usr_password VARCHAR(255) NOT NULL,
-    usr_name VARCHAR(80) NOT NULL,
+    usr_id SERIAL PRIMARY KEY,
+    usr_email VARCHAR(100),
+    usr_password VARCHAR(255),
+    usr_name VARCHAR(80),
     usr_phone VARCHAR(15),
-    usr_cdate DATE NOT NULL DEFAULT CURRENT_DATE,
-    usr_role CHAR(4) NOT NULL CHECK (usr_role IN ('STUD', 'ADMN'))
+    usr_cdate DATE,
+    usr_role CHAR(4) CHECK (usr_role IN ('STUD', 'ADMN'))
 );
 
--- ================================
--- Profiles Table
--- ================================
+-- Profiles table
 CREATE TABLE profiles (
-    prf_id SMALLINT PRIMARY KEY,
-    prf_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
-    prf_brn_id SMALLINT NOT NULL REFERENCES branches(brn_id) ON DELETE SET NULL,
-    prf_gpa DECIMAL(3,2) CHECK (prf_gpa BETWEEN 0 AND 10),
+    prf_id SERIAL PRIMARY KEY,
+    prf_usr_id INTEGER REFERENCES users(usr_id),
+    prf_brn_id INTEGER REFERENCES branches(brn_id),
+    prf_gpa DECIMAL(3,2),
     prf_updated DATE
 );
 
--- ================================
--- Company Categories Table
--- ================================
+-- Company Categories table
 CREATE TABLE company_categories (
-    cct_id SMALLINT PRIMARY KEY,
-    cct_name VARCHAR(50) NOT NULL,
+    cct_id SERIAL PRIMARY KEY,
+    cct_name VARCHAR(50),
     cct_desc VARCHAR(255)
 );
 
--- ================================
--- Companies Table
--- ================================
+-- Companies table
 CREATE TABLE companies (
-    cmp_id SMALLINT PRIMARY KEY,
-    cmp_cct_id SMALLINT NOT NULL REFERENCES company_categories(cct_id) ON DELETE SET NULL,
-    cmp_name VARCHAR(80) NOT NULL,
+    cmp_id SERIAL PRIMARY KEY,
+    cmp_cct_id INTEGER REFERENCES company_categories(cct_id),
+    cmp_name VARCHAR(80),
     cmp_desc VARCHAR(255)
 );
 
--- ================================
--- Company Teams Table
--- ================================
+-- Company Teams table
 CREATE TABLE company_teams (
-    ctm_id SMALLINT PRIMARY KEY,
-    ctm_cmp_id SMALLINT NOT NULL REFERENCES companies(cmp_id) ON DELETE CASCADE,
-    ctm_name VARCHAR(80) NOT NULL,
+    ctm_id SERIAL PRIMARY KEY,
+    ctm_cmp_id INTEGER REFERENCES companies(cmp_id),
+    ctm_name VARCHAR(80),
     ctm_contact VARCHAR(100)
 );
 
--- ================================
--- Placement Drives Table
--- ================================
+-- Placement Drives table
 CREATE TABLE placement_drives (
-    pld_id SMALLINT PRIMARY KEY,
-    pld_clg_id SMALLINT NOT NULL REFERENCES colleges(clg_id) ON DELETE CASCADE,
-    pld_name VARCHAR(80) NOT NULL,
-    pld_start_date DATE NOT NULL,
+    pld_id SERIAL PRIMARY KEY,
+    pld_clg_id INTEGER REFERENCES colleges(clg_id),
+    pld_name VARCHAR(80),
+    pld_start_date DATE,
     pld_end_date DATE
 );
 
--- ================================
--- Hiring Phases Table
--- ================================
+-- Hiring Phases table
 CREATE TABLE hiring_phases (
-    hph_id SMALLINT PRIMARY KEY,
-    hph_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
-    hph_name VARCHAR(50) NOT NULL,
-    hph_sequence SMALLINT NOT NULL,
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    hph_id SERIAL PRIMARY KEY,
+    hph_pld_id INTEGER REFERENCES placement_drives(pld_id),
+    hph_name VARCHAR(50),
+    hph_sequence INTEGER
 );
 
--- ================================
--- Screening Criteria Table
--- ================================
+-- Screening Criteria table
 CREATE TABLE screening_criteria (
-    scr_id SMALLINT PRIMARY KEY,
-    scr_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
-    scr_min_gpa DECIMAL(3,2) CHECK (scr_min_gpa BETWEEN 0 AND 10),
-    scr_skills VARCHAR(255),
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    scr_id SERIAL PRIMARY KEY,
+    scr_hph_id INTEGER REFERENCES hiring_phases(hph_id),
+    scr_pld_id INTEGER REFERENCES placement_drives(pld_id), -- Reference to placement drive
+    scr_min_gpa DECIMAL(3,2),
+    scr_skills VARCHAR(255)
 );
 
--- ================================
--- Screening Teams Table
--- ================================
+-- Screening Teams table
 CREATE TABLE screening_teams (
-    stm_id SMALLINT PRIMARY KEY,
-    stm_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
-    stm_ctm_id SMALLINT NOT NULL REFERENCES company_teams(ctm_id) ON DELETE CASCADE,
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    stm_id SERIAL PRIMARY KEY,
+    stm_hph_id INTEGER REFERENCES hiring_phases(hph_id),
+    stm_ctm_id INTEGER REFERENCES company_teams(ctm_id),
+    stm_pld_id INTEGER REFERENCES placement_drives(pld_id) -- Reference to placement drive
 );
 
--- ================================
--- Applications Table
--- ================================
-CREATE TABLE applications (
-    app_id SMALLINT PRIMARY KEY,
-    app_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
-    app_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
-    app_cmp_id SMALLINT NOT NULL REFERENCES companies(cmp_id) ON DELETE CASCADE,
-    app_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    app_status CHAR(4) NOT NULL CHECK (app_status IN ('PEND', 'APPR', 'REJC')),
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
-);
-
--- ================================
--- Phase Evaluations Table
--- ================================
+-- Phase Evaluations table
 CREATE TABLE phase_evaluations (
-    pev_id SMALLINT PRIMARY KEY,
-    pev_app_id SMALLINT NOT NULL REFERENCES applications(app_id) ON DELETE CASCADE,
-    pev_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
+    pev_id SERIAL PRIMARY KEY,
+    pev_app_id INTEGER REFERENCES applications(app_id),
+    pev_hph_id INTEGER REFERENCES hiring_phases(hph_id),
     pev_score DECIMAL(5,2),
-    pev_comments VARCHAR(255),
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    pev_comments VARCHAR(255)
 );
 
--- ================================
--- Resumes Table
--- ================================
+-- Applications table
+CREATE TABLE applications (
+    app_id SERIAL PRIMARY KEY,
+    app_usr_id INTEGER REFERENCES users(usr_id),
+    app_pld_id INTEGER REFERENCES placement_drives(pld_id),
+    app_cmp_id INTEGER REFERENCES companies(cmp_id),
+    app_date DATE,
+    app_status CHAR(4) CHECK (app_status IN ('PEND', 'APPR', 'REJC'))
+);
+
+-- Resumes table
 CREATE TABLE resumes (
-    res_id SMALLINT PRIMARY KEY,
-    res_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
-    res_file VARCHAR(255) NOT NULL,
-    res_upload_date DATE NOT NULL DEFAULT CURRENT_DATE
+    res_id SERIAL PRIMARY KEY,
+    res_usr_id INTEGER REFERENCES users(usr_id),
+    res_file VARCHAR(255),
+    res_upload_date DATE
 );
 
--- ================================
--- Resource Allocations Table
--- ================================
+-- Resource Allocations table
 CREATE TABLE resource_allocations (
-    ral_id SMALLINT PRIMARY KEY,
-    ral_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
-    ral_resource_type VARCHAR(50) NOT NULL,
-    ral_quantity INTEGER NOT NULL CHECK (ral_quantity >= 0),
-    ral_date DATE NOT NULL,
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    ral_id SERIAL PRIMARY KEY,
+    ral_pld_id INTEGER REFERENCES placement_drives(pld_id),
+    ral_resource_type VARCHAR(50),
+    ral_quantity INTEGER,
+    ral_date DATE
 );
 
--- ================================
--- Notifications Table
--- ================================
+-- Notifications table
 CREATE TABLE notifications (
-    ntf_id SMALLINT PRIMARY KEY,
-    ntf_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
-    ntf_message VARCHAR(255) NOT NULL,
-    ntf_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    ntf_read BOOLEAN DEFAULT FALSE,
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    ntf_id SERIAL PRIMARY KEY,
+    ntf_usr_id INTEGER REFERENCES users(usr_id),
+    ntf_message VARCHAR(255),
+    ntf_date DATE,
+    ntf_read BOOLEAN
 );
 
--- ================================
--- Reports Table
--- ================================
+-- Reports table
 CREATE TABLE reports (
-    rpt_id SMALLINT PRIMARY KEY,
-    rpt_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
-    rpt_type CHAR(4) NOT NULL CHECK (rpt_type IN ('PLAC', 'ANLY')),
-    rpt_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    rpt_file VARCHAR(255),
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+    rpt_id SERIAL PRIMARY KEY,
+    rpt_usr_id INTEGER REFERENCES users(usr_id),
+    rpt_type CHAR(4) CHECK (rpt_type IN ('PLAC', 'ANLY')),
+    rpt_date DATE,
+    rpt_file VARCHAR(255)
 );
 
--- ================================
--- Audit Logs Table
--- ================================
-CREATE TABLE audit_logs (
-    alg_id SMALLINT PRIMARY KEY,
-    alg_app_id SMALLINT NOT NULL REFERENCES applications(app_id) ON DELETE CASCADE,
-    alg_action VARCHAR(50) NOT NULL,
-    alg_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
-);
-
--- ================================
--- System Configs Table
--- ================================
+-- System Configs table
 CREATE TABLE system_configs (
-    cfg_id SMALLINT PRIMARY KEY,
-    cfg_key VARCHAR(50) UNIQUE NOT NULL,
+    cfg_id SERIAL PRIMARY KEY,
+    cfg_key VARCHAR(50),
     cfg_value VARCHAR(255),
     cfg_desc VARCHAR(255)
 );
 
--- ================================
--- FAQs Table
--- ================================
-CREATE TABLE faqs (
-    faq_id SMALLINT PRIMARY KEY,
-    faq_question VARCHAR(255) NOT NULL,
-    faq_answer VARCHAR(255) NOT NULL
+-- Audit Logs table
+CREATE TABLE audit_logs (
+    alg_id SERIAL PRIMARY KEY,
+    alg_app_id INTEGER REFERENCES applications(app_id),
+    alg_action VARCHAR(50),
+    alg_date DATE
 );
+
+-- FAQs table
+CREATE TABLE faqs (
+    faq_id SERIAL PRIMARY KEY,
+    faq_question VARCHAR(255),
+    faq_answer VARCHAR(255)
+);
+
+-- Insert data (Example inserts)
+INSERT INTO colleges (clg_name, clg_address, clg_contact) 
+VALUES ('ABC University', '123 University Ave, City', '1234567890');
+
+INSERT INTO branches (brn_clg_id, brn_name, brn_desc) 
+VALUES (1, 'Computer Science', 'CS Branch Description');
+
+INSERT INTO users (usr_email, usr_password, usr_name, usr_phone, usr_cdate, usr_role) 
+VALUES ('student@example.com', 'password123', 'John Doe', '9876543210', CURRENT_DATE, 'STUD');
+
+INSERT INTO profiles (prf_usr_id, prf_brn_id, prf_gpa, prf_updated) 
+VALUES (1, 1, 3.75, CURRENT_DATE);
+
+INSERT INTO company_categories (cct_name, cct_desc) 
+VALUES ('Software', 'Software Companies');
+
+INSERT INTO companies (cmp_cct_id, cmp_name, cmp_desc) 
+VALUES (1, 'TechCorp', 'Leading Tech Company');
+
+INSERT INTO company_teams (ctm_cmp_id, ctm_name, ctm_contact) 
+VALUES (1, 'HR Team', 'hr@techcorp.com');
+
+INSERT INTO placement_drives (pld_clg_id, pld_name, pld_start_date, pld_end_date) 
+VALUES (1, 'TechCorp Placement Drive', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 day');
+
+INSERT INTO hiring_phases (hph_pld_id, hph_name, hph_sequence) 
+VALUES (1, 'Initial Screening', 1);
+
+INSERT INTO screening_criteria (scr_hph_id, scr_pld_id, scr_min_gpa, scr_skills) 
+VALUES (1, 1, 3.50, 'Java, SQL');
+
+INSERT INTO screening_teams (stm_hph_id, stm_ctm_id, stm_pld_id) 
+VALUES (1, 1, 1);
+
+INSERT INTO applications (app_usr_id, app_pld_id, app_cmp_id, app_date, app_status) 
+VALUES (1, 1, 1, CURRENT_DATE, 'PEND');
+
+INSERT INTO resumes (res_usr_id, res_file, res_upload_date) 
+VALUES (1, 'resume.pdf', CURRENT_DATE);
+
+INSERT INTO resource_allocations (ral_pld_id, ral_resource_type, ral_quantity, ral_date) 
+VALUES (1, 'Laptop', 10, CURRENT_DATE);
+
+INSERT INTO notifications (ntf_usr_id, ntf_message, ntf_date, ntf_read) 
+VALUES (1, 'Your application is pending review.', CURRENT_DATE, FALSE);
+
+INSERT INTO reports (rpt_usr_id, rpt_type, rpt_date, rpt_file) 
+VALUES (1, 'PLAC', CURRENT_DATE, 'placement_report.pdf');
+
+INSERT INTO system_configs (cfg_key, cfg_value, cfg_desc) 
+VALUES ('system_max_applications', '1000', 'Maximum applications per placement drive');
+
+INSERT INTO audit_logs (alg_app_id, alg_action, alg_date) 
+VALUES (1, 'Application submitted', CURRENT_DATE);
+
+INSERT INTO faqs (faq_question, faq_answer) 
+VALUES ('How to apply?', 'You can apply through the placement drive portal.');
+
+
+-- Insert sample data into colleges
+INSERT INTO colleges (clg_name, clg_address, clg_contact) 
+VALUES ('ABC University', '123 University Ave, City', '1234567890'),
+       ('XYZ Institute', '456 Tech Park, City', '9876543210');
+
+-- Insert sample data into branches
+INSERT INTO branches (brn_clg_id, brn_name, brn_desc) 
+VALUES (1, 'Computer Science', 'Department of Computer Science'),
+       (1, 'Electrical Engineering', 'Department of Electrical Engineering'),
+       (2, 'Mechanical Engineering', 'Department of Mechanical Engineering');
+
+-- Insert sample data into users
+INSERT INTO users (usr_email, usr_password, usr_name, usr_phone, usr_cdate, usr_role) 
+VALUES ('john.doe@example.com', 'password123', 'John Doe', '9876543210', CURRENT_DATE, 'STUD'),
+       ('admin@example.com', 'admin123', 'Admin User', '1234567890', CURRENT_DATE, 'ADMN');
+
+-- Insert sample data into profiles
+INSERT INTO profiles (prf_usr_id, prf_brn_id, prf_gpa, prf_updated) 
+VALUES (1, 1, 3.75, CURRENT_DATE),
+       (2, 2, 3.50, CURRENT_DATE);
+
+-- Insert sample data into company_categories
+INSERT INTO company_categories (cct_name, cct_desc) 
+VALUES ('Software', 'Software companies hiring for development roles'),
+       ('Hardware', 'Hardware companies hiring for manufacturing roles');
+
+-- Insert sample data into companies
+INSERT INTO companies (cmp_cct_id, cmp_name, cmp_desc) 
+VALUES (1, 'TechCorp', 'A leading software development company'),
+       (2, 'BuildTech', 'A company specializing in hardware development');
+
+-- Insert sample data into company_teams
+INSERT INTO company_teams (ctm_cmp_id, ctm_name, ctm_contact) 
+VALUES (1, 'TechCorp HR Team', 'hr@techcorp.com'),
+       (2, 'BuildTech Recruitment', 'recruitment@buildtech.com');
+
+-- Insert sample data into placement_drives
+INSERT INTO placement_drives (pld_clg_id, pld_name, pld_start_date, pld_end_date) 
+VALUES (1, 'TechCorp Placement Drive', CURRENT_DATE, CURRENT_DATE + INTERVAL '2 days'),
+       (2, 'BuildTech Hiring Drive', CURRENT_DATE + INTERVAL '1 week', CURRENT_DATE + INTERVAL '1 week 2 days');
+
+-- Insert sample data into hiring_phases
+INSERT INTO hiring_phases (hph_pld_id, hph_name, hph_sequence) 
+VALUES (1, 'Pre-screening', 1),
+       (1, 'Technical Interview', 2),
+       (2, 'Initial Screening', 1);
+
+-- Insert sample data into screening_criteria
+INSERT INTO screening_criteria (scr_hph_id, scr_pld_id, scr_min_gpa, scr_skills) 
+VALUES (1, 1, 3.00, 'Basic Programming'),
+       (2, 1, 3.50, 'Java, SQL, Problem-solving'),
+       (1, 2, 3.00, 'Basic Programming, Hardware Knowledge');
+
+-- Insert sample data into screening_teams
+INSERT INTO screening_teams (stm_hph_id, stm_ctm_id, stm_pld_id) 
+VALUES (1, 1, 1),
+       (2, 1, 1),
+       (1, 2, 2);
+
+-- Insert sample data into applications
+INSERT INTO applications (app_usr_id, app_pld_id, app_cmp_id, app_date, app_status) 
+VALUES (1, 1, 1, CURRENT_DATE, 'PEND'),
+       (2, 2, 2, CURRENT_DATE, 'APPR');
+
+-- Insert sample data into resumes
+INSERT INTO resumes (res_usr_id, res_file, res_upload_date) 
+VALUES (1, 'john_doe_resume.pdf', CURRENT_DATE),
+       (2, 'admin_resume.pdf', CURRENT_DATE);
+
+-- Insert sample data into resource_allocations
+INSERT INTO resource_allocations (ral_pld_id, ral_resource_type, ral_quantity, ral_date) 
+VALUES (1, 'Laptop', 50, CURRENT_DATE),
+       (2, 'Projector', 5, CURRENT_DATE + INTERVAL '1 week');
+
+-- Insert sample data into notifications
+INSERT INTO notifications (ntf_usr_id, ntf_message, ntf_date, ntf_read) 
+VALUES (1, 'Your application has been reviewed.', CURRENT_DATE, FALSE),
+       (2, 'Your application has been approved.', CURRENT_DATE, TRUE);
+
+-- Insert sample data into reports
+INSERT INTO reports (rpt_usr_id, rpt_type, rpt_date, rpt_file) 
+VALUES (1, 'PLAC', CURRENT_DATE, 'placement_report.pdf'),
+       (2, 'ANLY', CURRENT_DATE + INTERVAL '1 month', 'analysis_report.pdf');
+
+-- Insert sample data into system_configs
+INSERT INTO system_configs (cfg_key, cfg_value, cfg_desc) 
+VALUES ('max_applications_per_drive', '100', 'Maximum number of applications allowed for a drive'),
+       ('application_deadline', '2025-12-31', 'Last date for accepting applications');
+
+-- Insert sample data into audit_logs
+INSERT INTO audit_logs (alg_app_id, alg_action, alg_date) 
+VALUES (1, 'Application Submitted', CURRENT_DATE),
+       (2, 'Application Approved', CURRENT_DATE);
+
+-- Insert sample data into faqs
+INSERT INTO faqs (faq_question, faq_answer) 
+VALUES ('How do I apply for a placement drive?', 'You can apply through the placement portal.'),
+       ('What is the minimum GPA requirement?', 'The minimum GPA requirement is 3.00 for most drives.');
