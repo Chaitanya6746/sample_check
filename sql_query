@@ -1,0 +1,216 @@
+-- ================================
+-- Colleges Table
+-- ================================
+CREATE TABLE colleges (
+    clg_id SMALLINT PRIMARY KEY,
+    clg_name VARCHAR(80) NOT NULL,
+    clg_address VARCHAR(255),
+    clg_contact VARCHAR(15)
+);
+
+-- ================================
+-- Branches Table
+-- ================================
+CREATE TABLE branches (
+    brn_id SMALLINT PRIMARY KEY,
+    brn_clg_id SMALLINT NOT NULL REFERENCES colleges(clg_id) ON DELETE CASCADE,
+    brn_name VARCHAR(50) NOT NULL,
+    brn_desc VARCHAR(255)
+);
+
+-- ================================
+-- Users Table
+-- ================================
+CREATE TABLE users (
+    usr_id SMALLINT PRIMARY KEY,
+    usr_email VARCHAR(100) NOT NULL UNIQUE,
+    usr_password VARCHAR(255) NOT NULL,
+    usr_name VARCHAR(80) NOT NULL,
+    usr_phone VARCHAR(15),
+    usr_cdate DATE NOT NULL DEFAULT CURRENT_DATE,
+    usr_role CHAR(4) NOT NULL CHECK (usr_role IN ('STUD', 'ADMN'))
+);
+
+-- ================================
+-- Profiles Table
+-- ================================
+CREATE TABLE profiles (
+    prf_id SMALLINT PRIMARY KEY,
+    prf_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
+    prf_brn_id SMALLINT NOT NULL REFERENCES branches(brn_id) ON DELETE SET NULL,
+    prf_gpa DECIMAL(3,2) CHECK (prf_gpa BETWEEN 0 AND 10),
+    prf_updated DATE
+);
+
+-- ================================
+-- Company Categories Table
+-- ================================
+CREATE TABLE company_categories (
+    cct_id SMALLINT PRIMARY KEY,
+    cct_name VARCHAR(50) NOT NULL,
+    cct_desc VARCHAR(255)
+);
+
+-- ================================
+-- Companies Table
+-- ================================
+CREATE TABLE companies (
+    cmp_id SMALLINT PRIMARY KEY,
+    cmp_cct_id SMALLINT NOT NULL REFERENCES company_categories(cct_id) ON DELETE SET NULL,
+    cmp_name VARCHAR(80) NOT NULL,
+    cmp_desc VARCHAR(255)
+);
+
+-- ================================
+-- Company Teams Table
+-- ================================
+CREATE TABLE company_teams (
+    ctm_id SMALLINT PRIMARY KEY,
+    ctm_cmp_id SMALLINT NOT NULL REFERENCES companies(cmp_id) ON DELETE CASCADE,
+    ctm_name VARCHAR(80) NOT NULL,
+    ctm_contact VARCHAR(100)
+);
+
+-- ================================
+-- Placement Drives Table
+-- ================================
+CREATE TABLE placement_drives (
+    pld_id SMALLINT PRIMARY KEY,
+    pld_clg_id SMALLINT NOT NULL REFERENCES colleges(clg_id) ON DELETE CASCADE,
+    pld_name VARCHAR(80) NOT NULL,
+    pld_start_date DATE NOT NULL,
+    pld_end_date DATE
+);
+
+-- ================================
+-- Hiring Phases Table
+-- ================================
+CREATE TABLE hiring_phases (
+    hph_id SMALLINT PRIMARY KEY,
+    hph_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
+    hph_name VARCHAR(50) NOT NULL,
+    hph_sequence SMALLINT NOT NULL,
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Screening Criteria Table
+-- ================================
+CREATE TABLE screening_criteria (
+    scr_id SMALLINT PRIMARY KEY,
+    scr_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
+    scr_min_gpa DECIMAL(3,2) CHECK (scr_min_gpa BETWEEN 0 AND 10),
+    scr_skills VARCHAR(255),
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Screening Teams Table
+-- ================================
+CREATE TABLE screening_teams (
+    stm_id SMALLINT PRIMARY KEY,
+    stm_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
+    stm_ctm_id SMALLINT NOT NULL REFERENCES company_teams(ctm_id) ON DELETE CASCADE,
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Applications Table
+-- ================================
+CREATE TABLE applications (
+    app_id SMALLINT PRIMARY KEY,
+    app_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
+    app_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
+    app_cmp_id SMALLINT NOT NULL REFERENCES companies(cmp_id) ON DELETE CASCADE,
+    app_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    app_status CHAR(4) NOT NULL CHECK (app_status IN ('PEND', 'APPR', 'REJC')),
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Phase Evaluations Table
+-- ================================
+CREATE TABLE phase_evaluations (
+    pev_id SMALLINT PRIMARY KEY,
+    pev_app_id SMALLINT NOT NULL REFERENCES applications(app_id) ON DELETE CASCADE,
+    pev_hph_id SMALLINT NOT NULL REFERENCES hiring_phases(hph_id) ON DELETE CASCADE,
+    pev_score DECIMAL(5,2),
+    pev_comments VARCHAR(255),
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Resumes Table
+-- ================================
+CREATE TABLE resumes (
+    res_id SMALLINT PRIMARY KEY,
+    res_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
+    res_file VARCHAR(255) NOT NULL,
+    res_upload_date DATE NOT NULL DEFAULT CURRENT_DATE
+);
+
+-- ================================
+-- Resource Allocations Table
+-- ================================
+CREATE TABLE resource_allocations (
+    ral_id SMALLINT PRIMARY KEY,
+    ral_pld_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE,
+    ral_resource_type VARCHAR(50) NOT NULL,
+    ral_quantity INTEGER NOT NULL CHECK (ral_quantity >= 0),
+    ral_date DATE NOT NULL,
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Notifications Table
+-- ================================
+CREATE TABLE notifications (
+    ntf_id SMALLINT PRIMARY KEY,
+    ntf_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
+    ntf_message VARCHAR(255) NOT NULL,
+    ntf_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    ntf_read BOOLEAN DEFAULT FALSE,
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Reports Table
+-- ================================
+CREATE TABLE reports (
+    rpt_id SMALLINT PRIMARY KEY,
+    rpt_usr_id SMALLINT NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE,
+    rpt_type CHAR(4) NOT NULL CHECK (rpt_type IN ('PLAC', 'ANLY')),
+    rpt_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    rpt_file VARCHAR(255),
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- Audit Logs Table
+-- ================================
+CREATE TABLE audit_logs (
+    alg_id SMALLINT PRIMARY KEY,
+    alg_app_id SMALLINT NOT NULL REFERENCES applications(app_id) ON DELETE CASCADE,
+    alg_action VARCHAR(50) NOT NULL,
+    alg_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    placement_id SMALLINT NOT NULL REFERENCES placement_drives(pld_id) ON DELETE CASCADE
+);
+
+-- ================================
+-- System Configs Table
+-- ================================
+CREATE TABLE system_configs (
+    cfg_id SMALLINT PRIMARY KEY,
+    cfg_key VARCHAR(50) UNIQUE NOT NULL,
+    cfg_value VARCHAR(255),
+    cfg_desc VARCHAR(255)
+);
+
+-- ================================
+-- FAQs Table
+-- ================================
+CREATE TABLE faqs (
+    faq_id SMALLINT PRIMARY KEY,
+    faq_question VARCHAR(255) NOT NULL,
+    faq_answer VARCHAR(255) NOT NULL
+);
